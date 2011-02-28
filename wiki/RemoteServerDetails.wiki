@@ -46,7 +46,7 @@ To test stop remote server functionality, you may wish to add a test case or tes
 
 =.NET remote library interface with the generic remote server=
 
-The generic remote server uses .NET reflection to access the actual remote library during runtime using late-binding technique. The remote server includes keyword *stop_remote_server* so you don't have to implement that in the remote library.
+The generic remote server uses .NET reflection to access the actual remote library during runtime using late-binding technique. The remote server includes keyword *stop_remote_server()* so you don't have to implement that in the remote library.
 
 Remote library methods should conform to [http://www.robotframework.org Robot Framework] keyword API specification, meaning: methods should be named as *method_name()* rather than !MethodName() or methodName(); the underscore represents a space; the method is made available as a keyword in [http://www.robotframework.org Robot Framework] named *Method Name*.
 
