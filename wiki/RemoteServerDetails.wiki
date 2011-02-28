@@ -7,7 +7,7 @@
 ==Prerequisites==
 
   * .NET Framework (version 2.0 and above, but not tested & compiled against all versions. May work with Mono and .NET 1.x as well, but untested.)
-  * [http://www.xml-rpc.net XML-RPC.NET] library (compiled DLL binary). To not complicate matters in open source code and binary distribution, source code and binaries in the project do not include this library.
+  * [http://www.xml-rpc.net XML-RPC.NET] library (compiled DLL binary)
   * Example .NET remote library, bundled with the generic server, or your own .NET remote (class) library, for use with [http://www.robotframework.org Robot Framework].
   * If using with [http://www.robotframework.org Robot Framework] locally, running server on localhost, then need to install [http://www.robotframework.org Robot Framework].
   * [http://www.sharpdevelop.net SharpDevelop], msbuild, or a version of [http://www.microsoft.com/visualstudio/en-us/ Visual Studio] may be required to compile [http://www.xml-rpc.net XML-RPC.NET] library.
@@ -16,10 +16,10 @@
 
 As the remote server acts as a remote library for [http://www.robotframework.org Robot Framework], no installation is needed. But the prerequisites have to be met first.
 
-  # Download and compile [http://www.xml-rpc.net XML-RPC.NET] library if not done already.
-  # Download the generic remote server zip file package.
+  # Download and compile [http://www.xml-rpc.net XML-RPC.NET] library, if needed.
+  # Download the [http://sharprobotremoteserver.googlecode.com/files/sharprobotremoteserver.zip generic remote server zip file package].
   # Extract to desired location.
-  # Copy over [http://www.xml-rpc.net XML-RPC.NET] library DLL to extracted location.
+  # Copy over [http://www.xml-rpc.net XML-RPC.NET] library DLL to extracted location, if needed.
 
 You may add additional .NET class library DLLs in extract location to start the remote server with those libraries instead of the provided example library.
 
