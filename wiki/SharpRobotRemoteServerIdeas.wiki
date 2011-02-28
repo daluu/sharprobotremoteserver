@@ -1,0 +1,35 @@
+#summary Use case ideas for sharprobotremoteserver.
+
+<wiki:toc max_depth="2" />
+
+=Overview of usage ideas=
+
+This page provides some ideas on what sharprobotremoteserver could be used for.
+
+==Starting base for Robot Framework .NET-based libraries==
+
+Since current [http://www.robotframework.org Robot Framework] .NET support, via [http://www.ironpython.net IronPython], is in experimental stage, and most users and developers of .NET (whether for RobotFramework or not) are typically not well versed in [http://www.python.org Python], this alternative might provide a better pathway to developing .NET-based test libraries for [http://www.robotframework.org Robot Framework], at least initially until we have better .NET support.
+
+Here are some ideas for [http://www.robotframework.org Robot Framework] .NET test libraries that could be built (or better built with remote server over [http://www.ironpython.net IronPython]):
+
+ * Alternatives (or complementary libraries) to SeleniumLibrary, and Microsoft-centric web testing (e.g. Silverlight)
+  * !WatiNLibrary (as alternative to SeleniumLibrary)
+  * webAiiLibrary (http://www.telerik.com/products/web-testing-tools/webaii-framework-features.aspx)
+  * !InCisifLibrary (http://www.incisif.net/home.asp?ok=ok)
+ * Microsoft and .NET centric (desktop) GUI automation (and web too)
+  * !WhiteLibrary (http://white.codeplex.com/)
+  * UIAutomationLibrary (http://en.wikipedia.org/wiki/Microsoft_UI_Automation)
+  * !AdLabQuailLibrary (http://www.andreev.org/qa-testing-automation)
+  * QAlibersLibrary (http://www.qaliber.net/)
+  * !RanorexLibrary (http://www.andreev.org/qa-testing-automation)
+  * !Silk4NetLibrary (http://www.borland.com/us/products/silk/silk4net.html)
+  * SOAP/XML-RPC/REST web service test library? By implementing test library as a web service client that makes requests and validates responses.
+  * Implement test libraries for .NET features that would otherwise not be available with ActivePython (or Windows version of Python), or IronPython.
+
+==Use as generic XML-RPC server==
+
+Generic remote server is a working implementation of an XML-RPC server that doesn't require IIS to run, and instead of implementing XML-RPC web service API methods in the server itself, can use server's .NET reflection abilities to implement the APIs in a separate .NET class library that is loaded by server at runtime/startup.
+
+==Other ideas==
+
+You name it?
