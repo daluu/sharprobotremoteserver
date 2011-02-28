@@ -7,7 +7,7 @@
 ==Prerequisites==
 
   * .NET Framework (version 2.0 and above, but not tested & compiled against all versions. May work with Mono and .NET 1.x as well, but untested.)
-  * [http://www.xml-rpc.net XML-RPC.NET] library (compiled DLL binary). To not complicate matters in open source code and binary distribution, source code and binaries in this project do not include this library.
+  * [http://www.xml-rpc.net XML-RPC.NET] library (compiled DLL binary). To not complicate matters in open source code and binary distribution, source code and binaries in the project do not include this library.
   * Example .NET remote library, bundled with the generic server, or your own .NET remote (class) library, for use with [http://www.robotframework.org Robot Framework].
   * If using with [http://www.robotframework.org Robot Framework] locally, running server on localhost, then need to install [http://www.robotframework.org Robot Framework].
   * [http://www.sharpdevelop.net SharpDevelop], msbuild, or a version of [http://www.microsoft.com/visualstudio/en-us/ Visual Studio] may be required to compile [http://www.xml-rpc.net XML-RPC.NET] library.
@@ -28,6 +28,8 @@ You may add additional .NET class library DLLs in extract location to start the 
 Run *robotremoteserver* passing it path to .NET class library DLL that contains the implementation of keywords (e.g. actual remote library), and name of class to use in the form of *!NamespaceName.!ClassName* without quotes. You can also run server without arguments to get this usage info.
 
 Server also takes two optional parameters for IP address and port, or they will default to the [http://www.robotframework.org Robot Framework] defaults of localhost/127.0.0.1 and 8270.
+
+See [RemoteServerDetails#Testing_the_example_remote_library] for an example of usage.
 
 =Testing the example remote library=
 
@@ -58,7 +60,7 @@ Additionally, the library's use of data types in keyword arguments or return val
 
   * *get_keyword_names* may return extra .NET library methods that weren't intended to be used by [http://www.robotframework.org Robot Framework] (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see.
 
-  * get_keyword_documentation is not implemented. A future enhancement to be considered.
+  * *get_keyword_documentation* is not implemented. A future enhancement to be considered.
 
   * keyword output will always be blank except in cases of exceptions being raised. Currently no real definition of what constitutes "output" from a keyword.
 
