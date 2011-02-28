@@ -1,0 +1,75 @@
+#summary Installation, usage, and details for remote server
+
+=Installation=
+
+==Prerequisites==
+
+* .NET Framework (version 2.0 and above, but not tested & compiled against all versions. May work with Mono and .NET 1.x as well, but untested.)
+* [http://www.xml-rpc.net XML-RPC.NET] library (compiled DLL binary). To not complicate matters in open source code and binary distribution, source code and binaries in this project do not include this library.
+* Example .NET remote library, bundled with the generic server, or your own .NET remote (class) library, for use with [http://www.robotframework.org Robot Framework].
+* If using with [http://www.robotframework.org Robot Framework] locally, running server on localhost, then need to install [http://www.robotframework.org Robot Framework].
+* SharpDevelop, msbuild, or a version of Visual Studio may be required to compile [http://www.xml-rpc.net XML-RPC.NET] library.
+
+==Installation procedure==
+
+As the remote server acts as a remote library for [http://www.robotframework.org Robot Framework], no installation is needed. But the prerequisites have to be met first.
+
+# Download and compile [http://www.xml-rpc.net XML-RPC.NET] library if not done already.
+# Download the generic remote server zip file package.
+# Extract to desired location.
+# Copy over [http://www.xml-rpc.net XML-RPC.NET] library DLL to extracted location.
+
+You may add additional .NET class library DLLs in extract location to start the remote server with those libraries instead of the provided example library.
+
+=Usage instructions=
+
+Run *robotremoteserver* passing it path to .NET class library DLL that contains the implementation of keywords (e.g. actual remote library), and name of class to use in the form of *NamespaceName.ClassName* without quotes. You can also run server without arguments to get this usage info.
+
+Server also takes two optional parameters for IP address and port, or they will default to the RobotFramework defaults of localhost/127.0.0.1 and 8270.
+
+=Testing the example remote library=
+
+Run robotremoteserver with the examplelibrary like follows:
+
+ robotremoteserver.exe examplelibrary.dll RobotFramework.ExampleRemoteLibrary
+
+Then run the [http://robotframework.googlecode.com/svn/trunk/tools/remoteserver/example/remote_tests.html example tests] for remote libraries/servers available from [http://www.robotframework.org Robot Framework] project.
+
+To test stop remote server functionality, you may wish to add this keyword as a test case, where the comma denotes:
+
+|| Test Case || Action || Argument ||
+|| Stop Server Test || Run Keyword And Ignore Error || Stop Remote Server
+
+=Designing remote libraries with the generic remote server=
+
+The generic remote server uses .NET reflection to access the actual remote library during runtime using late-binding technique. The remote server includes keyword *stop_remote_server* so you don't have to implement that in the remote library.
+
+Remote library methods should conform to [http://www.robotframework.org Robot Framework] keyword API specification, meaning: methods should be named as *method_name()* rather than MethodName() or methodName(); the underscore "_" represents a space; the method is made available as a keyword in RobotFramework named *Method Name*.
+
+Additionally, the library's use of data types in keyword arguments or return values should conform to the [http://www.xmlrpc.com/spec XML-RPC] protocol and what is supported by [http://www.robotframework.org Robot Framework].
+
+=Known Issues=
+
+* *Stop Remote Server* keyword does not return any [http://www.xmlrpc.com/spec XML-RPC] response, which may result in a failure in [http://www.robotframework.org Robot Framework] if not run with something like *Run Keyword And Ignore Error*.
+
+* Return values are always returned (or type-casted) as a string.
+
+* *get_keyword_names* may return extra .NET library methods that weren't intended to be used by RobotFramework (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see.
+
+* get_keyword_documentation is not implemented. A future enhancement to be considered.
+
+* keyword output will always be blank except in cases of exceptions being raised. Currently no real definition of what constitutes "output" from a keyword.
+
+* remote library keywords will always return as PASS except for those that have return type as boolean and return false, and in case of exceptions
+
+* Exceptions not caught at the server or library level may be returned as generic XML-RPC fault code 0 per XML-RPC.net library. These uncaught exceptions may or will also cause keyword to fail unexpectedly.
+
+* Remote server currently not designed with "web services" as a remote library in mind, but can be modified to load a "web service" reference as the remote library rather than a local class library assembly DLL.
+
+=Tips for Debugging=
+
+* You can use a REST client (like popular browser extensions) to pass correct [http://www.xmlrpc.com/spec XML-RPC] requests (an HTTP POST with data payload in XML-RPC format) and validate correct XML response from remote library.
+
+* You can use [http://www.robotframework.org Robot Framework] tests to make the XML-RPC calls and validate correct responses, etc. if you are not good with XML-RPC messaging.
+
+* For library DLL related issues, you can build other .NET tools (e.g. console app or WinForms app) to load the same library being used with remote server and test to make sure library works correctly before loading into server at runtime.
