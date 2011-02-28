@@ -27,26 +27,26 @@ You may add additional .NET class library DLLs in extract location to start the 
 
 Run *robotremoteserver* passing it path to .NET class library DLL that contains the implementation of keywords (e.g. actual remote library), and name of class to use in the form of *NamespaceName.ClassName* without quotes. You can also run server without arguments to get this usage info.
 
-Server also takes two optional parameters for IP address and port, or they will default to the RobotFramework defaults of localhost/127.0.0.1 and 8270.
+Server also takes two optional parameters for IP address and port, or they will default to the [http://www.robotframework.org Robot Framework] defaults of localhost/127.0.0.1 and 8270.
 
 =Testing the example remote library=
 
 Run robotremoteserver with the examplelibrary like follows:
 
-  robotremoteserver.exe examplelibrary.dll RobotFramework.ExampleRemoteLibrary
+  robotremoteserver.exe examplelibrary.dll 'RobotFramework.ExampleRemoteLibrary
 
 Then run the [http://robotframework.googlecode.com/svn/trunk/tools/remoteserver/example/remote_tests.html example tests] for remote libraries/servers available from [http://www.robotframework.org Robot Framework] project.
 
 To test stop remote server functionality, you may wish to add this keyword as a test case, where the comma denotes:
 
 || Test Case || Action || Argument ||
-|| Stop Server Test || Run Keyword And Ignore Error || Stop Remote Server
+|| Stop Server Test || Run Keyword And Ignore Error || Stop Remote Server ||
 
 =Designing remote libraries with the generic remote server=
 
 The generic remote server uses .NET reflection to access the actual remote library during runtime using late-binding technique. The remote server includes keyword *stop_remote_server* so you don't have to implement that in the remote library.
 
-Remote library methods should conform to [http://www.robotframework.org Robot Framework] keyword API specification, meaning: methods should be named as *method_name()* rather than MethodName() or methodName(); the underscore "_" represents a space; the method is made available as a keyword in RobotFramework named *Method Name*.
+Remote library methods should conform to [http://www.robotframework.org Robot Framework] keyword API specification, meaning: methods should be named as *method_name()* rather than 'MethodName() or methodName(); the underscore represents a space; the method is made available as a keyword in [http://www.robotframework.org Robot Framework] named *Method Name*.
 
 Additionally, the library's use of data types in keyword arguments or return values should conform to the [http://www.xmlrpc.com/spec XML-RPC] protocol and what is supported by [http://www.robotframework.org Robot Framework].
 
@@ -56,7 +56,7 @@ Additionally, the library's use of data types in keyword arguments or return val
 
   * Return values are always returned (or type-casted) as a string.
 
-  * *get_keyword_names* may return extra .NET library methods that weren't intended to be used by RobotFramework (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see.
+  * *get_keyword_names* may return extra .NET library methods that weren't intended to be used by [http://www.robotframework.org Robot Framework] (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see.
 
   * get_keyword_documentation is not implemented. A future enhancement to be considered.
 
@@ -74,4 +74,4 @@ Additionally, the library's use of data types in keyword arguments or return val
 
   * You can use [http://www.robotframework.org Robot Framework] tests to make the XML-RPC calls and validate correct responses, etc. if you are not good with XML-RPC messaging.
 
-  * For library DLL related issues, you can build other .NET tools (e.g. console app or WinForms app) to load the same library being used with remote server and test to make sure library works correctly before loading into server at runtime.
+  * For library DLL related issues, you can build other .NET tools (e.g. console app or 'WinForms app) to load the same library being used with remote server and test to make sure library works correctly before loading into server at runtime.
