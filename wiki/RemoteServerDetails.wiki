@@ -39,7 +39,7 @@ Run robotremoteserver with the examplelibrary like follows:
 
 Then run the [http://robotframework.googlecode.com/svn/trunk/tools/remoteserver/example/remote_tests.html example tests] for remote libraries/servers available from [http://www.robotframework.org Robot Framework] project.
 
-To test stop remote server functionality, you may wish to add this keyword as a test case, where the comma denotes:
+To test stop remote server functionality, you may wish to add a test case or test case/suite teardown like this:
 
 || Test Case || Action || Argument ||
 || Stop Server Test || Run Keyword And Ignore Error || Stop Remote Server ||
