@@ -1,4 +1,5 @@
 #summary Use case ideas for sharprobotremoteserver.
+#labels robotframework,testautomation,Library,testlibrary,testing,test,DotNet,XML-RPC,GUI,automation
 
 <wiki:toc max_depth="2" />
 
@@ -8,7 +9,7 @@ This page provides some ideas on what sharprobotremoteserver could be used for.
 
 ==Starting base for Robot Framework .NET-based libraries==
 
-Since current [http://www.robotframework.org Robot Framework] .NET support, via [http://www.ironpython.net IronPython], is in experimental stage, and most users and developers of .NET (whether for RobotFramework or not) are typically not well versed in [http://www.python.org Python], this alternative might provide a better pathway to developing .NET-based test libraries for [http://www.robotframework.org Robot Framework], at least initially until we have better .NET support.
+Since current [http://www.robotframework.org Robot Framework] .NET support, via [http://www.ironpython.net IronPython], is in experimental stage, and most users and developers of .NET (whether for [http://www.robotframework.org Robot Framework] or not) are typically not well versed in [http://www.python.org Python], this alternative might provide a better pathway to developing .NET-based test libraries for [http://www.robotframework.org Robot Framework], at least initially until we have better .NET support.
 
 Here are some ideas for [http://www.robotframework.org Robot Framework] .NET test libraries that could be built (or better built with remote server over [http://www.ironpython.net IronPython]):
 
