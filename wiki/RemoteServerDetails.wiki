@@ -80,13 +80,11 @@ An alternative solution would be to modify the remote server to use dynamic bind
 
   * remote library keywords will always return as PASS except for those that have return type as boolean and return false, and in case of exceptions
 
-  * remote library keyword implementations that don't return a basic data type (string, int, bool) or an array of it (string[], etc.) will not return any value. For those that return an array of basic data type, it will be returned in a delimited string format like _{val1, val2, ...}_.
+  * remote library keyword implementations that don't return a basic data type (string, int, bool) or an array of it will not return any value. For those that return an array of basic data type, it will be returned in a delimited string format like _{val1, val2, ...}_.
 
   * Exceptions not caught at the server or library level may be returned as generic [http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#4.2 XML-RPC fault code 0 per XML-RPC.net library]. These uncaught exceptions may or will also cause keyword to fail unexpectedly.
 
-  * Remote server currently not designed with "web services" as a remote library in mind, but can be modified to load a "web service" reference as the remote library rather than a local class library assembly DLL. 
-
-  * See RemoteServerDetails#Using_.NET_libraries_that_reference_web_services 
+  * Remote server currently not designed with "web services" as a remote library in mind, but can be modified to load a "web service" reference as the remote library rather than a local class library assembly DLL.  
 
 =Tips for Debugging=
 
