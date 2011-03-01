@@ -64,7 +64,7 @@ For this case, you would need to write a wrapper class library that provides the
 
 If loading a .NET library into remote server, and that library references a web service, then in order for the binding to work correctly, you may have to copy the library's or web service client/consumer's app.config (or app.exe.config) data and save it as robotremoteserver.exe.config.
 
-An alternative solution would be to modify the remote server to use dynamic binding at runtime rather than the app.config binding method.
+An alternative solution would be to modify the remote server or the remote (class) library to use dynamic binding at runtime rather than the app.config (or appName.exe.config) binding method.
 
 =Known Issues=
 
