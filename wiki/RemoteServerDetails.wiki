@@ -17,7 +17,7 @@
 As the remote server acts as a remote library for [http://www.robotframework.org Robot Framework], no installation is needed. But the prerequisites have to be met first.
 
   # Download and compile [http://www.xml-rpc.net XML-RPC.NET] library, if needed.
-  # Download the [http://sharprobotremoteserver.googlecode.com/files/sharprobotremoteserver.zip generic remote server zip file package].
+  # Download the [http://sharprobotremoteserver.googlecode.com/files/sharprobotremoteserver-1.1.zip generic remote server zip file package].
   # Extract to desired location.
   # Copy over [http://www.xml-rpc.net XML-RPC.NET] library DLL to extracted location, if needed.
 
