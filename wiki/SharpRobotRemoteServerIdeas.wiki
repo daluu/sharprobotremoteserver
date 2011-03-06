@@ -17,6 +17,7 @@ Here are some ideas for [http://www.robotframework.org Robot Framework] .NET tes
   * WatiNLibrary (as alternative to !SeleniumLibrary)
   * webAiiLibrary (http://www.telerik.com/products/web-testing-tools/webaii-framework-features.aspx)
   * !InCisifLibrary (http://www.incisif.net/home.asp?ok=ok)
+  * SWATLibrary (http://sourceforge.net/projects/ulti-swat/)
  * Microsoft and .NET centric (desktop) GUI automation (and web too)
   * !WhiteLibrary (http://white.codeplex.com/)
   * UIAutomationLibrary (http://en.wikipedia.org/wiki/Microsoft_UI_Automation)
