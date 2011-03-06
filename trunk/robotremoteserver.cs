@@ -1,6 +1,4 @@
-﻿/*
- * Copyright (c) 2011 David Luu
- * XML-RPC.NET Copyright (c) 2006 Charles Cook
+﻿/* Copyright (c) 2011 David Luu
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +11,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * XML-RPC.NET Copyright (c) 2006 Charles Cook
+ * FYI, XML-RPC.NET is licensed under MIT License
+ * http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#6.12
  */
 using System;
 using System.IO;
 using System.Net;		//used for XML-RPC server
 using CookComputing.XmlRpc; //get from www.xml-rpc.net
 using System.Reflection; //for the get_keyword methods and run_keyword method
+using System.Xml;		//for use with get_keyword_documentation
+using System.Xml.XPath; //to generate documentation for remote library
 
 namespace RobotFramework
 {
@@ -43,6 +47,7 @@ namespace RobotFramework
 			string port = "8270";
 			string remoteLibrary;
 			string className;
+			string docFile;
 			
 			if(args.Length < 2)
 			{
@@ -50,9 +55,10 @@ namespace RobotFramework
 				System.Environment.Exit(0);				
 			}
 			remoteLibrary = args[0];
-			className = args[1];			
-			if(args.Length > 2) host = args[2];
-			if(args.Length > 3) port = args[3];
+			className = args[1];
+			docFile = args[2];
+			if(args.Length > 3) host = args[3];
+			if(args.Length > 4) port = args[4];
 			Console.WriteLine("");
 			Console.WriteLine("Robot Framework remote library started at {0} on port {1}, on {2}",host,port,System.DateTime.Now.ToString());
 			Console.WriteLine("");
@@ -65,7 +71,7 @@ namespace RobotFramework
 			while (true)
 			{
 				HttpListenerContext context = listener.GetContext();
-				XmlRpcListenerService svc = new XmlRpcMethods(remoteLibrary,className);
+				XmlRpcListenerService svc = new XmlRpcMethods(remoteLibrary,className,docFile);
 				svc.ProcessRequest(context);
 			}
 		}
@@ -76,13 +82,16 @@ namespace RobotFramework
 		public static void displayUsage()
 		{
 			Console.WriteLine("");
+			Console.WriteLine("robotremoteserver - v1.1");
+			Console.WriteLine("");
 			Console.WriteLine("Usage Info:");
 			Console.WriteLine("");
-			Console.WriteLine("  robotremoteserver pathToLibraryAssemblyFile RemoteLibraryClassName");
+			Console.WriteLine("  robotremoteserver pathToLibraryAssemblyFile RemoteLibraryClassName pathToDocumentationFile");
 			Console.WriteLine("    [address] [port]");
 			Console.WriteLine("");
 			Console.WriteLine("  Assembly file = DLL or EXE, etc. w/ keyword class methods to execute.");
 			Console.WriteLine("  Class name = keyword class w/ methods to execute. Include namespace as needed.");
+			Console.WriteLine("  Documentation file = .NET compiler generated XML documentation file for the class library.");
 			Console.WriteLine("");
 			Console.WriteLine("  Optionally specify IP address to bind remote server to.");
 			Console.WriteLine("    Default of 127.0.0.1 (localhost).");
@@ -90,7 +99,7 @@ namespace RobotFramework
 			Console.WriteLine("");
 			Console.WriteLine("Example:");
 			Console.WriteLine("");
-			Console.WriteLine("  robotremoteserver C:\\MyLibrary.dll MyNamespace.MyClass 192.168.0.10 8080");
+			Console.WriteLine("  robotremoteserver C:\\MyLibrary.dll MyNamespace.MyClass C:\\MyLibrary_doc.xml 192.168.0.10 8080");
 			Console.WriteLine("");
 			Console.WriteLine("");
 		}
@@ -104,6 +113,7 @@ namespace RobotFramework
 	{
 		private Assembly library;
 		private string libraryClass;
+		private XPathDocument doc;
 		
 		/// <summary>
 		/// Default constructure for XML-RPC method class
@@ -112,6 +122,7 @@ namespace RobotFramework
 		{
 			library = null;
 			libraryClass = null;
+			doc = null;
 		}
 		
 		/// <summary>
@@ -120,10 +131,11 @@ namespace RobotFramework
 		/// </summary>
 		/// <param name="libraryFile">Path to .NET assembly (DLL) file that contains the remote library class to load.</param>
 		/// <param name="libraryClassName">Name of remote library class to load, specified in the format of "NamespaceName.ClassName" without the quotes.</param>
-		public XmlRpcMethods(string libraryFile, string libraryClassName)
+		public XmlRpcMethods(string libraryFile, string libraryClassName, string docFile)
 		{
-			library = Assembly.LoadFrom(libraryFile);
+			library = Assembly.LoadFrom(libraryFile);			
 			libraryClass = libraryClassName;
+			doc = new XPathDocument(docFile);
 		}
 		
 		/// <summary>
@@ -271,8 +283,47 @@ namespace RobotFramework
 			}
 			return args;		
 		}		
-		//currently no implementation for get_keyword_documentation, until we can
-		//figure out how to return documentation via .NET reflection, etc.
+
+		/// <summary>
+		/// Get documentation for specified Robot Framework keyword.
+		/// Done by reading the .NET compiler generated XML documentation
+		/// for the loaded class library.
+		/// </summary>
+		/// <param name="keyword">The keyword to get documentation for.</param>
+		/// <returns>A documentation string for the given keyword.</returns>
+		[XmlRpcMethod]
+		public string get_keyword_documentation(string keyword)
+		{
+			string retval;
+			XPathNavigator docFinder = doc.CreateNavigator();
+			XPathNodeIterator docCol;			
+			string branch = "/doc/members/member[starts-with(@name,'M:"+libraryClass+"."+keyword+"')]/summary";
+			retval = docFinder.SelectSingleNode(branch).Value + System.Environment.NewLine + System.Environment.NewLine;		
+			try
+			{
+				branch = "/doc/members/member[starts-with(@name,'M:"+libraryClass+"."+keyword+"')]/param";
+				docCol = docFinder.Select(branch);
+				while (docCol.MoveNext())
+				{
+					retval = retval + docCol.Current.GetAttribute("name","") + ": " + docCol.Current.Value + System.Environment.NewLine;
+				};
+				retval = retval + System.Environment.NewLine;
+			}
+			catch
+			{
+				//do nothing
+			}
+			try
+			{
+				branch = "/doc/members/member[starts-with(@name,'M:"+libraryClass+"."+keyword+"')]/returns";
+				retval = retval + "Returns: " + docFinder.SelectSingleNode(branch).Value;
+			}
+			catch
+			{
+				//do nothing
+			}			
+			return retval;
+		}
 	}
 	
 	/// <summary>
