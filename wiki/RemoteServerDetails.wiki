@@ -35,7 +35,7 @@ See [RemoteServerDetails#Testing_the_example_remote_library] for an example of u
 
 Run robotremoteserver with the examplelibrary like follows:
 
-  robotremoteserver.exe examplelibrary.dll !RobotFramework.!ExampleRemoteLibrary
+  `robotremoteserver.exe examplelibrary.dll RobotFramework.ExampleRemoteLibrary examplelibrary_doc.xml`
 
 Then run the [http://robotframework.googlecode.com/svn/trunk/tools/remoteserver/example/remote_tests.html example tests] for remote libraries/servers available from [http://www.robotframework.org Robot Framework] project.
 
@@ -67,6 +67,17 @@ For this case, you would need to write a wrapper class library that provides the
 If loading a .NET library into remote server, and that library references a web service, then in order for the binding to work correctly, you may have to copy the library's or web service client/consumer's app.config (or app.exe.config) data and save it as robotremoteserver.exe.config.
 
 An alternative solution would be to modify the remote server or the remote (class) library to use dynamic binding at runtime rather than the app.config (or appName.exe.config) binding method.
+
+==Documentating your .NET remote library==
+
+You can generate Robot Framework HTML documentation (or maybe even documentation that is logged in test logs during test runs) for your test library by doing the following sequence of steps:
+
+ # Add the desired .NET XML (summary) code comments for classes and class methods to your test class library.
+ # Compile the class library with the documentation option to generate an accompanying XML documentation file. If compiling from command line, that would be the "/doc:pathToFile" option.
+ # Load the test library and its documentation file with remote server.
+ # Run the [http://code.google.com/p/robotframework/wiki/SupportingTools#Library_Documentation_Generator_(libdoc.py) libdoc.py] support tool from Robot Framework to generate the Robot Framework HTML documentation for the test library, as follows:
+
+  `python libdoc.py --name MyLibraryName --argument localhost:8270 Remote`
 
 =Known Issues=
 
