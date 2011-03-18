@@ -14,7 +14,8 @@
  * 
  * XML-RPC.NET Copyright (c) 2006 Charles Cook
  * FYI, XML-RPC.NET is licensed under MIT License
- * http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#6.12
+ * 
+ *     http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#6.12
  */
 using System;
 using System.IO;
@@ -23,6 +24,7 @@ using CookComputing.XmlRpc; //get from www.xml-rpc.net
 using System.Reflection; //for the get_keyword methods and run_keyword method
 using System.Xml;		//for use with get_keyword_documentation
 using System.Xml.XPath; //to generate documentation for remote library
+using System.Threading; //to shutdown server from remote request and at same time, return XML-RPC response
 
 namespace RobotFramework
 {
@@ -33,10 +35,24 @@ namespace RobotFramework
 	/// http://robotframework.googlecode.com/svn/tags/robotframework-2.5.6/doc/userguide/RobotFrameworkUserGuide.html#remote-library-interface
 	/// http://robotframework.googlecode.com/svn/tags/robotframework-2.5.6/doc/userguide/RobotFrameworkUserGuide.html#dynamic-library-api
 	/// 
-	/// Uses .NET reflection to serve the dynamically loaded remote library
+	/// Uses .NET reflection to serve the dynamically loaded remote library.
+	/// You may alternatively modify this starting code base to natively integrate
+	/// your .NET test library code into the server rather than load it dynamically.
+	/// 
+	/// Remote server uses built-in .NET HTTP web server library so doesn't require IIS, etc.
+	/// to simplify deployment and ease the life of QA personnel. However, if desired, you can
+	/// modify the codebase to depend on IIS or .NET Remoting, etc. by switching out the code
+	/// based of
+	/// http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#3.12
+	/// to any of these
+	/// http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#3.2
+	/// http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#3.4
+	/// http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#3.3 
 	/// 
 	/// Compile this into a console application, and then you can dynamically load a
 	/// separately compiled .NET class (Robot Framework keyword) library to use at startup.
+	/// You may alternatively modify the code to work as a Windows service, etc. instead
+	/// of a console application.
 	/// </summary>
 	class RemoteServer
 	{
@@ -47,7 +63,7 @@ namespace RobotFramework
 			string port = "8270";
 			string remoteLibrary;
 			string className;
-			string docFile;
+			string docFile = "";
 			
 			if(args.Length < 2)
 			{
@@ -56,22 +72,33 @@ namespace RobotFramework
 			}
 			remoteLibrary = args[0];
 			className = args[1];
-			docFile = args[2];
+			if(args.Length > 2) docFile = args[2];
 			if(args.Length > 3) host = args[3];
 			if(args.Length > 4) port = args[4];
 			Console.WriteLine("");
 			Console.WriteLine("Robot Framework remote library started at {0} on port {1}, on {2}",host,port,System.DateTime.Now.ToString());
 			Console.WriteLine("");
-			Console.WriteLine("Send XML-RPC method request 'stop_remote_server' to do so, or hit Ctrl + C, etc.");
-			Console.WriteLine("");			
+			Console.WriteLine("To stop remote server/library, send XML-RPC method request 'run_keyword' with");
+			Console.WriteLine("single argument of 'stop_remote_server' to do so, or hit Ctrl + C, etc.");
+			Console.WriteLine("");
 			
+			//Using .NET HTTP listener to remove dependence on IIS, etc. using code snippet from
+			// http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#3.12
 			HttpListener listener = new HttpListener();
 			listener.Prefixes.Add("http://"+host+":"+port+"/");
 			listener.Start();
 			while (true)
 			{
 				HttpListenerContext context = listener.GetContext();
-				XmlRpcListenerService svc = new XmlRpcMethods(remoteLibrary,className,docFile);
+				XmlRpcListenerService svc;
+				if(docFile == "")
+				{
+					svc = new XmlRpcMethods(remoteLibrary,className);
+				}
+				else
+				{
+					svc = new XmlRpcMethods(remoteLibrary,className,docFile);
+				}				
 				svc.ProcessRequest(context);
 			}
 		}
@@ -86,12 +113,13 @@ namespace RobotFramework
 			Console.WriteLine("");
 			Console.WriteLine("Usage Info:");
 			Console.WriteLine("");
-			Console.WriteLine("  robotremoteserver pathToLibraryAssemblyFile RemoteLibraryClassName pathToDocumentationFile");
-			Console.WriteLine("    [address] [port]");
+			Console.WriteLine("  robotremoteserver pathToLibraryAssemblyFile RemoteLibraryClassName");
+			Console.WriteLine("    pathToDocumentationFile [address] [port]");
 			Console.WriteLine("");
 			Console.WriteLine("  Assembly file = DLL or EXE, etc. w/ keyword class methods to execute.");
 			Console.WriteLine("  Class name = keyword class w/ methods to execute. Include namespace as needed.");
-			Console.WriteLine("  Documentation file = .NET compiler generated XML documentation file for the class library.");
+			Console.WriteLine("  Documentation file = .NET compiler generated XML documentation file for the");
+			Console.WriteLine("    class library.");
 			Console.WriteLine("");
 			Console.WriteLine("  Optionally specify IP address to bind remote server to.");
 			Console.WriteLine("    Default of 127.0.0.1 (localhost).");
@@ -99,9 +127,8 @@ namespace RobotFramework
 			Console.WriteLine("");
 			Console.WriteLine("Example:");
 			Console.WriteLine("");
-			Console.WriteLine("  robotremoteserver C:\\MyLibrary.dll MyNamespace.MyClass C:\\MyLibrary_doc.xml 192.168.0.10 8080");
-			Console.WriteLine("");
-			Console.WriteLine("");
+			Console.WriteLine("  robotremoteserver C:\\MyLibrary.dll MyNamespace.MyClass C:\\MyLibrary_doc.xml");
+			Console.WriteLine("    192.168.0.10 8080");
 		}
 	}
 	
@@ -116,7 +143,8 @@ namespace RobotFramework
 		private XPathDocument doc;
 		
 		/// <summary>
-		/// Default constructure for XML-RPC method class
+		/// Default constructor for XML-RPC method class.
+		/// Not really to be used.
 		/// </summary>
 		public XmlRpcMethods()
 		{
@@ -126,11 +154,27 @@ namespace RobotFramework
 		}
 		
 		/// <summary>
-		/// Ideal constructor for XML-RPC method class.
-		/// To be able to load specified library (assembly) for use
+		/// Basic constructor for XML-RPC method class.
+		/// Load specified library (assembly) for use.
+		/// No XML documentation provided to Robot Framework.
 		/// </summary>
 		/// <param name="libraryFile">Path to .NET assembly (DLL) file that contains the remote library class to load.</param>
 		/// <param name="libraryClassName">Name of remote library class to load, specified in the format of "NamespaceName.ClassName" without the quotes.</param>
+		public XmlRpcMethods(string libraryFile, string libraryClassName)
+		{
+			library = Assembly.LoadFrom(libraryFile);			
+			libraryClass = libraryClassName;
+			doc = null;
+		}
+		
+		/// <summary>
+		/// Best constructor for XML-RPC method class.
+		/// Load specified library (assembly) for use
+		/// and provide XML documentation to Robot Framework.
+		/// </summary>
+		/// <param name="libraryFile">Path to .NET assembly (DLL) file that contains the remote library class to load.</param>
+		/// <param name="libraryClassName">Name of remote library class to load, specified in the format of "NamespaceName.ClassName" without the quotes.</param>
+		/// <param name="docFile">Path to XML documentation file for the specified .NET class assembly file.</param>
 		public XmlRpcMethods(string libraryFile, string libraryClassName, string docFile)
 		{
 			library = Assembly.LoadFrom(libraryFile);			
@@ -174,11 +218,25 @@ namespace RobotFramework
 		[XmlRpcMethod]
 		public keyword_results run_keyword(string keyword, object[] args)
   		{
-			if(keyword == "stop_remote_server") stop_remote_server();
+			keyword_results kr = new keyword_results();
+			if(keyword == "stop_remote_server")
+			{
+				//spawn new thread to do a delayed server shutdown
+				//and return XML-RPC response before delay is over
+				new Thread(stop_remote_server).Start();
+				Console.WriteLine("Shutting down remote server/library in 1 minute, from Robot Framework remote");
+				Console.WriteLine("library/XML-RPC request.");
+				Console.WriteLine("");
+				kr.Return = "1";
+				kr.status = "PASS";
+				kr.error = "";
+				kr.output = "";
+				kr.traceback = "";
+				return kr;
+			}
 			Type classType = library.GetType(libraryClass);
 			object libObj = Activator.CreateInstance(classType);
-			MethodInfo mi = classType.GetMethod(keyword);
-			keyword_results kr = new keyword_results();
+			MethodInfo mi = classType.GetMethod(keyword);			
 			
 			try
 			{
@@ -253,14 +311,18 @@ namespace RobotFramework
 		
 		/// <summary>
 		/// As defined by Robot Framework spec, this keyword will remotely stop remote library server.
-		/// To be called by Robot Framework remote library interface, or with any XML-RPC request.
+		/// To be called by Robot Framework remote library interface
+		/// or by XML-RPC request to run_keyword() XML-RPC method,
+		/// passing it "stop_remote_server" as single argument.
 		/// 
 		/// NOTE: Currently will not return any XML-RPC response after being called, unlike the Python implementation.
 		/// </summary>
-		[XmlRpcMethod]
-		public void stop_remote_server()
+		private static void stop_remote_server()
   		{
-			//unfortunately, not able to send boolean/int value of 1 before server stops for some reason		
+			//delay shutdown for some time so can return XML-RPC response
+			int delay = 60000; //let's arbitrarily set delay at 1 minute
+			Thread.Sleep(delay);
+			Console.WriteLine("Remote server/library shut down at {0}",System.DateTime.Now.ToString());
 			System.Environment.Exit(0);
 		}
 		
@@ -293,12 +355,24 @@ namespace RobotFramework
 		/// <returns>A documentation string for the given keyword.</returns>
 		[XmlRpcMethod]
 		public string get_keyword_documentation(string keyword)
-		{
-			string retval;
+		{			
+			if(doc == null)
+			{
+				return ""; //no XML documentation provided, return nothing
+			}//else return keyword (class method) documentation from XML file
+			
+			string retval = ""; //start off with no documentation, in case keyword is not documented
 			XPathNavigator docFinder = doc.CreateNavigator();
 			XPathNodeIterator docCol;			
 			string branch = "/doc/members/member[starts-with(@name,'M:"+libraryClass+"."+keyword+"')]/summary";
-			retval = docFinder.SelectSingleNode(branch).Value + System.Environment.NewLine + System.Environment.NewLine;		
+			try
+			{
+				retval = docFinder.SelectSingleNode(branch).Value + System.Environment.NewLine + System.Environment.NewLine;
+			}
+			catch
+			{
+				//no summary info provided for .NET class method
+			}
 			try
 			{
 				branch = "/doc/members/member[starts-with(@name,'M:"+libraryClass+"."+keyword+"')]/param";
@@ -311,7 +385,7 @@ namespace RobotFramework
 			}
 			catch
 			{
-				//do nothing
+				//no parameter info provided or some parameter info missing for .NET class method
 			}
 			try
 			{
@@ -320,9 +394,9 @@ namespace RobotFramework
 			}
 			catch
 			{
-				//do nothing
+				//.NET class method either does not return a value (e.g. void) or documentation not provided
 			}			
-			return retval;
+			return retval; //return whatever documentation was found for the keyword
 		}
 	}
 	
