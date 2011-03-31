@@ -56,25 +56,42 @@ namespace RobotFramework
 	/// </summary>
 	class RemoteServer
 	{
+		public static bool enableStopServer;
+		
 		public static void Main(string[] args)
 		{
-			//set default IP and port for RobotFramework XML-RPC server spec
+			//set defaults for RobotFramework XML-RPC server spec
 			string host = "127.0.0.1"; //localhost
 			string port = "8270";
-			string remoteLibrary;
-			string className;
-			string docFile = "";
+			enableStopServer = true;
+			//params to load test library and documentation
+			string remoteLibrary = "";
+			string className = "";
+			string docFile = "";			
+
+			//parse arguments
+			for(int i = 0; i < args.Length; i++){
+				if(args[i] == "--library")
+					remoteLibrary = args[i+1];
+				if(args[i] == "--class")
+					className = args[i+1];
+				if(args[i] == "--doc")
+					docFile = args[i+1];
+				if(args[i] == "--host")
+					host = args[i+1];
+				if(args[i] == "--port")
+					port = args[i+1];
+				if(args[i] == "--nostopsvr")
+					enableStopServer = false;
+			}
 			
-			if(args.Length < 2)
+			//check required arguments
+			if(remoteLibrary == "" || className == "")
 			{
 				displayUsage();
 				System.Environment.Exit(0);				
 			}
-			remoteLibrary = args[0];
-			className = args[1];
-			if(args.Length > 2) docFile = args[2];
-			if(args.Length > 3) host = args[3];
-			if(args.Length > 4) port = args[4];
+			
 			Console.WriteLine("");
 			Console.WriteLine("Robot Framework remote library started at {0} on port {1}, on {2}",host,port,System.DateTime.Now.ToString());
 			Console.WriteLine("");
@@ -113,22 +130,24 @@ namespace RobotFramework
 			Console.WriteLine("");
 			Console.WriteLine("Usage Info:");
 			Console.WriteLine("");
-			Console.WriteLine("  robotremoteserver pathToLibraryAssemblyFile RemoteLibraryClassName");
-			Console.WriteLine("    pathToDocumentationFile [address] [port]");
+			Console.WriteLine("  robotremoteserver --library pathToLibraryAssemblyFile");
+			Console.WriteLine("    --class RemoteLibraryClassName [--doc pathToDocumentationFile]");
+			Console.WriteLine("    [--host address] [--port portNumber] [--nostopsvr]");
 			Console.WriteLine("");
 			Console.WriteLine("  Assembly file = DLL or EXE, etc. w/ keyword class methods to execute.");
 			Console.WriteLine("  Class name = keyword class w/ methods to execute. Include namespace as needed.");
 			Console.WriteLine("  Documentation file = .NET compiler generated XML documentation file for the");
-			Console.WriteLine("    class library.");
+			Console.WriteLine("    class library. Optional for passing documentation to Robot Framework.");
 			Console.WriteLine("");
-			Console.WriteLine("  Optionally specify IP address to bind remote server to.");
+			Console.WriteLine("  Optionally specify IP address or host name to bind remote server to.");
 			Console.WriteLine("    Default of 127.0.0.1 (localhost).");
 			Console.WriteLine("  Optionally specify port to bind remote server to. Default of 8270.");
+			Console.WriteLine("  Optionally set whether to allow remote shut down of server. Default yes.");
 			Console.WriteLine("");
 			Console.WriteLine("Example:");
 			Console.WriteLine("");
-			Console.WriteLine("  robotremoteserver C:\\MyLibrary.dll MyNamespace.MyClass C:\\MyLibrary_doc.xml");
-			Console.WriteLine("    192.168.0.10 8080");
+			Console.WriteLine("  robotremoteserver --library C:\\MyLibrary.dll --class MyNamespace.MyClass ");
+			Console.WriteLine("    --doc C:\\MyLibrary_doc.xml --host 192.168.0.10 --port 8080");
 		}
 	}
 	
@@ -179,7 +198,11 @@ namespace RobotFramework
 		{
 			library = Assembly.LoadFrom(libraryFile);			
 			libraryClass = libraryClassName;
-			doc = new XPathDocument(docFile);
+			try{
+				doc = new XPathDocument(docFile);
+			}catch{
+				doc = null; //failed to load XML documentation file, set null for further processing
+			}			
 		}
 		
 		/// <summary>
@@ -220,17 +243,24 @@ namespace RobotFramework
   		{
 			keyword_results kr = new keyword_results();
 			if(keyword == "stop_remote_server")
-			{
-				//spawn new thread to do a delayed server shutdown
-				//and return XML-RPC response before delay is over
-				new Thread(stop_remote_server).Start();
-				Console.WriteLine("Shutting down remote server/library in 1 minute, from Robot Framework remote");
-				Console.WriteLine("library/XML-RPC request.");
-				Console.WriteLine("");
+			{				
+				if(RemoteServer.enableStopServer){
+					//spawn new thread to do a delayed server shutdown
+					//and return XML-RPC response before delay is over
+					new Thread(stop_remote_server).Start();
+					Console.WriteLine("Shutting down remote server/library in 5 seconds, from Robot Framework remote");
+					Console.WriteLine("library/XML-RPC request.");
+					Console.WriteLine("");
+					kr.output = "NOTE: remote server shutting/shut down.";					
+				}else{
+					kr.output = "NOTE: remote server not configured to allow remote shutdowns. Your request has been ignored.";
+					//in case RF spec changes to report failure in this case in future
+					//kr.status = "FAIL");
+					//kr.error = "NOTE: remote server not configured to allow remote shutdowns. Your request has been ignored.";
+				}
 				kr.Return = "1";
 				kr.status = "PASS";
 				kr.error = "";
-				kr.output = "";
 				kr.traceback = "";
 				return kr;
 			}
@@ -320,7 +350,7 @@ namespace RobotFramework
 		private static void stop_remote_server()
   		{
 			//delay shutdown for some time so can return XML-RPC response
-			int delay = 60000; //let's arbitrarily set delay at 1 minute
+			int delay = 5000; //let's arbitrarily set delay at 5 seconds
 			Thread.Sleep(delay);
 			Console.WriteLine("Remote server/library shut down at {0}",System.DateTime.Now.ToString());
 			System.Environment.Exit(0);
@@ -334,6 +364,7 @@ namespace RobotFramework
 		[XmlRpcMethod]
 		public string[] get_keyword_arguments(string keyword)
 		{
+			if(keyword == "stop_remote_server") return new String[0];
 			Type classType = library.GetType(libraryClass);
 			MethodInfo mi = classType.GetMethod(keyword);
 			ParameterInfo[] pis = mi.GetParameters();
@@ -355,15 +386,27 @@ namespace RobotFramework
 		/// <returns>A documentation string for the given keyword.</returns>
 		[XmlRpcMethod]
 		public string get_keyword_documentation(string keyword)
-		{			
+		{
+			string retval = ""; //start off with no documentation, in case keyword is not documented
+			
+			if(keyword == "stop_remote_server"){
+				retval = "Remotely shut down remote server/library w/ Robot Framework keyword.\n\n";
+				retval += "If server is configured to not allow remote shutdown, keyword 'request' is ignored by server.\n\n";
+				retval += "Always returns status of PASS with return value of 1. Output value contains helpful info and may indicate whether remote shut down is allowed or not.";
+				return retval;
+			}
 			if(doc == null)
 			{
-				return ""; //no XML documentation provided, return nothing
+				return retval; //no XML documentation provided, return blank doc
 			}//else return keyword (class method) documentation from XML file
 			
-			string retval = ""; //start off with no documentation, in case keyword is not documented
-			XPathNavigator docFinder = doc.CreateNavigator();
-			XPathNodeIterator docCol;			
+			XPathNavigator docFinder;
+			XPathNodeIterator docCol;
+			try{
+				docFinder = doc.CreateNavigator();
+			}catch{
+				docFinder = null; //failed to load XML documentation file, set null
+			}			
 			string branch = "/doc/members/member[starts-with(@name,'M:"+libraryClass+"."+keyword+"')]/summary";
 			try
 			{
