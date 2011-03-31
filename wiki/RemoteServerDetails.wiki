@@ -27,7 +27,7 @@ You may add additional .NET class library DLLs in extracted location to start th
 
 Run *robotremoteserver* passing it path to .NET class library DLL that contains the implementation of keywords (e.g. actual remote library), and name of class to use in the form of *!NamespaceName.!ClassName* without quotes. You can also run server without arguments to get this usage info.
 
-Server also takes three optional parameters for keyword documentation, IP address and port, or they will default to the [http://www.robotframework.org Robot Framework] defaults of localhost/127.0.0.1 and 8270. For keyword documentation, you have to supply an XML documentation file for the .NET class assembly that can be generated during code compilation. If not provided, documentation will simply be blank when called by Robot Framework.
+Server also takes optional parameters for keyword documentation, IP address, port, and whether to allow remotely stopping server or they will default to the [http://www.robotframework.org Robot Framework] defaults of localhost/127.0.0.1, 8270, and to allow stopping server, respectively. For keyword documentation, you have to supply an XML documentation file for the .NET class assembly that can be generated during code compilation. If not provided, documentation will simply be blank when called by Robot Framework.
 
 See [RemoteServerDetails#Testing_the_example_remote_library] for an example of usage.
 
@@ -35,11 +35,11 @@ See [RemoteServerDetails#Testing_the_example_remote_library] for an example of u
 
 Run robotremoteserver with the examplelibrary like follows:
 
-  `robotremoteserver.exe examplelibrary.dll RobotFramework.ExampleRemoteLibrary examplelibrary_doc.xml`
+  `robotremoteserver.exe --library examplelibrary.dll --class RobotFramework.ExampleRemoteLibrary --doc examplelibrary_doc.xml`
 
 Then run the [http://robotframework.googlecode.com/svn/trunk/tools/remoteserver/example/remote_tests.html example tests] for remote libraries/servers available from [http://www.robotframework.org Robot Framework] project.
 
-To test stop remote server functionality, you may wish to add a test case or test case/suite teardown like this:
+To test stop remote server functionality, you may wish to add a test case, test step, or test case/suite teardown like this:
 
 || Test Case || Action || Argument ||
 || Stop Server Test || Run Keyword || Stop Remote Server ||
@@ -78,6 +78,8 @@ You can generate Robot Framework HTML documentation (or maybe even documentation
  # Run the [http://code.google.com/p/robotframework/wiki/SupportingTools#Library_Documentation_Generator_(libdoc.py) libdoc.py] support tool from Robot Framework to generate the Robot Framework HTML documentation for the test library, as follows:
 
   `python libdoc.py --name MyLibraryName --argument localhost:8270 Remote`
+
+You can alternatively use IronPython instead of Python here as well.
 
 =Known Issues=
 
