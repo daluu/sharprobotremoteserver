@@ -9,9 +9,9 @@ This page provides some ideas on what sharprobotremoteserver could be used for.
 
 ==Alternative to IronPython for .NET support with Robot Framewrok==
 
-More native .NET support than IronPython, less issues figuring out how to adapt calls to C#/VB.NET code into IronPython and debugging such calls. And IronPython support in Robot Framework is also experimental. But the remote server/library protocol is a standard specification for Robot Framework.
+More native .NET support than !IronPython, less issues figuring out how to adapt calls to C#/VB.NET code into !IronPython and debugging such calls. And !IronPython support in Robot Framework is also experimental. But the remote server/library protocol is a standard specification for Robot Framework.
 
-Useful for automation calls that block I/O or take time to execute or that could hang/block Robot Framework (if using IronPython for local test library). sharprobotremoteserver can execute such automation on another machine or in another process outside of Robot Framework. This would be a similar approach to use of JVMConnector for Robot Framework Java test libraries. Other alternative is to run Python remote server using IronPython, but we don't know how well that works.
+Useful for automation calls that block I/O or take time to execute or that could hang/block Robot Framework (if using !IronPython for local test library). sharprobotremoteserver can execute such automation on another machine or in another process outside of Robot Framework. This would be a similar approach to use of JVMConnector for Robot Framework Java test libraries. Other alternative is to run Python remote server using !IronPython, but we don't know how well that works.
 
 ==Starting base for Robot Framework .NET-based libraries==
 
