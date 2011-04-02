@@ -7,6 +7,12 @@
 
 This page provides some ideas on what sharprobotremoteserver could be used for.
 
+==Alternative to IronPython for .NET support with Robot Framewrok==
+
+More native .NET support than IronPython, less issues figuring out how to adapt calls to C#/VB.NET code into IronPython and debugging such calls. And IronPython support in Robot Framework is also experimental. But the remote server/library protocol is a standard specification for Robot Framework.
+
+Useful for automation calls that block I/O or take time to execute or that could hang/block Robot Framework (if using IronPython for local test library). sharprobotremoteserver can execute such automation on another machine or in another process outside of Robot Framework. This would be a similar approach to use of JVMConnector for Robot Framework Java test libraries. Other alternative is to run Python remote server using IronPython, but we don't know how well that works.
+
 ==Starting base for Robot Framework .NET-based libraries==
 
 Since current [http://www.robotframework.org Robot Framework] .NET support, via [http://www.ironpython.net IronPython], is in experimental stage, and most users and developers of .NET (whether for [http://www.robotframework.org Robot Framework] or not) are typically not well versed in [http://www.python.org Python], this alternative might provide a better pathway to developing .NET-based test libraries for [http://www.robotframework.org Robot Framework], at least initially until we have better .NET support.
@@ -14,7 +20,7 @@ Since current [http://www.robotframework.org Robot Framework] .NET support, via 
 Here are some ideas for [http://www.robotframework.org Robot Framework] .NET test libraries that could be built (or better built with remote server over [http://www.ironpython.net IronPython]):
 
  * Alternatives (or complementary libraries) to !SeleniumLibrary, and Microsoft-centric web testing (e.g. Silverlight)
-  * WatiNLibrary (as alternative to !SeleniumLibrary)
+  * [http://code.google.com/p/robotframework-watinlibrary/ WatiNLibrary] (as alternative to [http://code.google.com/p/robotframework-seleniumlibrary/ SeleniumLibrary])
   * webAiiLibrary (http://www.telerik.com/products/web-testing-tools/webaii-framework-features.aspx)
   * !InCisifLibrary (http://www.incisif.net/home.asp?ok=ok)
   * SWATLibrary (http://sourceforge.net/projects/ulti-swat/)
@@ -26,7 +32,8 @@ Here are some ideas for [http://www.robotframework.org Robot Framework] .NET tes
   * !RanorexLibrary (http://www.andreev.org/qa-testing-automation)
   * !Silk4NetLibrary (http://www.borland.com/us/products/silk/silk4net.html)
   * SOAP/XML-RPC/REST web service test library? By implementing test library as a web service client that makes requests and validates responses.
-  * Implement test libraries for .NET features that would otherwise not be available with [http://www.activestate.com/activepython ActivePython], or Windows version of [http://www.python.org Python], or [http://www.ironpython.net IronPython].
+  * Microsoft WCF-based web services test library? By implementing test library as a web service client that makes requests and validates responses. Especially useful for WCF or SOAP services that use Windows authentication that other SOAP tools/libraries don't support (e.g. SOAPUI).
+  * Implement test libraries for .NET features that would otherwise not be available with or problematic for [http://www.activestate.com/activepython ActivePython], or Windows version of [http://www.python.org Python], or [http://www.ironpython.net IronPython].
 
 ==Use as generic XML-RPC server==
 
