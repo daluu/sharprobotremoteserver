@@ -13,6 +13,8 @@ More native .NET support than !IronPython, less issues figuring out how to adapt
 
 Useful for automation calls that block I/O or take time to execute or that could hang/block Robot Framework (if using !IronPython for local test library). sharprobotremoteserver can execute such automation on another machine or in another process outside of Robot Framework. This would be a similar approach to use of JVMConnector for Robot Framework Java test libraries. Other alternative is to run Python remote server using !IronPython, but we don't know how well that works.
 
+Another benefit of this server is deploying test library/server in environment where you don't want to or can't install anything. With !IronPython, you'd have to install the runtime to use .NET libraries, but maybe it can be compiled to a portable binary using SharpDevelop IDE (though not with Visual Studio yet).
+
 ==Starting base for Robot Framework .NET-based libraries==
 
 Since current [http://www.robotframework.org Robot Framework] .NET support, via [http://www.ironpython.net IronPython], is in experimental stage, and most users and developers of .NET (whether for [http://www.robotframework.org Robot Framework] or not) are typically not well versed in [http://www.python.org Python], this alternative might provide a better pathway to developing .NET-based test libraries for [http://www.robotframework.org Robot Framework], at least initially until we have better .NET support.
@@ -34,9 +36,6 @@ Here are some ideas for [http://www.robotframework.org Robot Framework] .NET tes
   * SOAP/XML-RPC/REST web service test library? By implementing test library as a web service client that makes requests and validates responses.
   * Microsoft WCF-based web services test library? By implementing test library as a web service client that makes requests and validates responses. Especially useful for WCF or SOAP services that use Windows authentication that other SOAP tools/libraries don't support (e.g. SOAPUI).
   * Implement test libraries for .NET features that would otherwise not be available with or problematic for [http://www.activestate.com/activepython ActivePython], or Windows version of [http://www.python.org Python], or [http://www.ironpython.net IronPython].
- * Deploy test library/server in environment where you don't want to or can't install anything (unlike possibly IronPython). Just copy over binaries.
- * Pair remote server with custom test library to bypass Windows 7/Vista/Server 2008 UAC or need for "Run As Administrator" for test scripts/libraries/automation.
- * Pair remote server with a Hyper-V test library to start/stop/manage virtual machines. Similarly for Virtual Server 2005, etc.
 
 ==Use as generic XML-RPC server==
 
@@ -44,4 +43,7 @@ Generic remote server is a working implementation of an XML-RPC server that does
 
 ==Other ideas==
 
-You name it?
+ * Deploy test library/server in environment where you don't want to or can't install anything (unlike possibly !IronPython). Just copy over binaries.
+ * Pair remote server with custom test library to bypass Windows 7/Vista/Server 2008 UAC or need for "Run As Administrator" for test scripts/libraries/automation.
+ * Pair remote server with a Hyper-V test library to start/stop/manage virtual machines. Similarly for Virtual Server 2005, etc.
+ * You name it?
