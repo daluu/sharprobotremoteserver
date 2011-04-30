@@ -34,6 +34,9 @@ Here are some ideas for [http://www.robotframework.org Robot Framework] .NET tes
   * SOAP/XML-RPC/REST web service test library? By implementing test library as a web service client that makes requests and validates responses.
   * Microsoft WCF-based web services test library? By implementing test library as a web service client that makes requests and validates responses. Especially useful for WCF or SOAP services that use Windows authentication that other SOAP tools/libraries don't support (e.g. SOAPUI).
   * Implement test libraries for .NET features that would otherwise not be available with or problematic for [http://www.activestate.com/activepython ActivePython], or Windows version of [http://www.python.org Python], or [http://www.ironpython.net IronPython].
+ * Deploy test library/server in environment where you don't want to or can't install anything (unlike possibly IronPython). Just copy over binaries.
+ * Pair remote server with custom test library to bypass Windows 7/Vista/Server 2008 UAC or need for "Run As Administrator" for test scripts/libraries/automation.
+ * Pair remote server with a Hyper-V test library to start/stop/manage virtual machines. Similarly for Virtual Server 2005, etc.
 
 ==Use as generic XML-RPC server==
 
