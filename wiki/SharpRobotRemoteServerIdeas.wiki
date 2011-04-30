@@ -13,7 +13,7 @@ More native .NET support than !IronPython, less issues figuring out how to adapt
 
 Useful for automation calls that block I/O or take time to execute or that could hang/block Robot Framework (if using !IronPython for local test library). sharprobotremoteserver can execute such automation on another machine or in another process outside of Robot Framework. This would be a similar approach to use of JVMConnector for Robot Framework Java test libraries. Other alternative is to run Python remote server using !IronPython, but we don't know how well that works.
 
-Another benefit of this server is deploying test library/server in environment where you don't want to or can't install anything. With !IronPython, you'd have to install the runtime to use .NET libraries, but maybe it can be compiled to a portable binary using SharpDevelop IDE (though not with Visual Studio yet).
+Another benefit of this server is deploying test library/server in environment where you don't want to or can't install anything. With !IronPython, you'd have to install the runtime to use .NET libraries, but maybe it can be compiled to a portable binary using !SharpDevelop IDE (though not with Visual Studio yet).
 
 ==Starting base for Robot Framework .NET-based libraries==
 
