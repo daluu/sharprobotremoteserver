@@ -85,7 +85,7 @@ You can alternatively use IronPython instead of Python here as well.
 
   * Return values are always returned (or type-casted) as a string. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=2 issue 2])
 
-  * *get_keyword_names* may return extra .NET library methods that weren't intended to be used by [http://www.robotframework.org Robot Framework] (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=5 issue 5])
+  * *get_keyword_names* may return extra .NET library methods that weren't intended to be used by [http://www.robotframework.org Robot Framework] (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=5 issue 5]), except for library documentation generation with libdoc.py.
 
   * keyword output will always be blank except in cases of exceptions being raised. Currently no real definition of what constitutes "output" from a keyword. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=3 issue 3])
 
