@@ -25,7 +25,12 @@ namespace RobotFramework
 		public void strings_should_be_equal(string str1, string str2)
 		{
 			Console.WriteLine("Comparing '{0}' to '{1}'",str1,str2);
-			if(str1 != str2) throw new Exception("Given strings are not equal");			
+			if(str1 != str2){
+				Console.WriteLine("not equal"); 
+				//fails below w/ XML-RPC fault code 0, Object reference not set to an instance of an object.
+				throw new Exception("Given strings are not equal");
+			}
+			
 		}
 		
 		/// <summary>
