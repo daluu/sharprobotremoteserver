@@ -25,6 +25,7 @@ using System.Reflection; //for the get_keyword methods and run_keyword method
 using System.Xml;		//for use with get_keyword_documentation
 using System.Xml.XPath; //to generate documentation for remote library
 using System.Threading; //to shutdown server from remote request and at same time, return XML-RPC response
+using System.Diagnostics;
 
 namespace RobotFramework
 {
@@ -157,20 +158,18 @@ namespace RobotFramework
 	/// </summary>
 	public class XmlRpcMethods : XmlRpcListenerService
 	{
+		//.NET Robot Framework test library components
 		private Assembly library;
 		private string libraryClass;
 		private XPathDocument doc;
 		
-		/// <summary>
-		/// Default constructor for XML-RPC method class.
-		/// Not really to be used.
-		/// </summary>
-		public XmlRpcMethods()
-		{
-			library = null;
-			libraryClass = null;
-			doc = null;
-		}
+		//I/O management components
+		private TextWriter libout;
+		private TextWriter liberrs;
+		
+		//.NET reflection components to handle the .NET library being served
+		private Type classType;
+		private object libObj;
 		
 		/// <summary>
 		/// Basic constructor for XML-RPC method class.
@@ -179,11 +178,9 @@ namespace RobotFramework
 		/// </summary>
 		/// <param name="libraryFile">Path to .NET assembly (DLL) file that contains the remote library class to load.</param>
 		/// <param name="libraryClassName">Name of remote library class to load, specified in the format of "NamespaceName.ClassName" without the quotes.</param>
-		public XmlRpcMethods(string libraryFile, string libraryClassName)
+		public XmlRpcMethods(string libraryFile, string libraryClassName): this(libraryFile,libraryClassName,null)
 		{
-			library = Assembly.LoadFrom(libraryFile);			
-			libraryClass = libraryClassName;
-			doc = null;
+			//instantiate by calling the other constructor
 		}
 		
 		/// <summary>
@@ -195,14 +192,21 @@ namespace RobotFramework
 		/// <param name="libraryClassName">Name of remote library class to load, specified in the format of "NamespaceName.ClassName" without the quotes.</param>
 		/// <param name="docFile">Path to XML documentation file for the specified .NET class assembly file.</param>
 		public XmlRpcMethods(string libraryFile, string libraryClassName, string docFile)
-		{
-			library = Assembly.LoadFrom(libraryFile);			
+		{						
 			libraryClass = libraryClassName;
 			try{
 				doc = new XPathDocument(docFile);
 			}catch{
 				doc = null; //failed to load XML documentation file, set null for further processing
-			}			
+			}
+			//initialize reflection components
+			library = Assembly.LoadFrom(libraryFile);
+			classType = library.GetType(libraryClass);
+			libObj = Activator.CreateInstance(classType);
+
+			//initialize the I/O management components
+			libout = new StringWriter();
+			liberrs = new StringWriter();			
 		}
 		
 		/// <summary>
@@ -216,7 +220,6 @@ namespace RobotFramework
 		[XmlRpcMethod]
 		public string[] get_keyword_names()
   		{
-			Type classType = library.GetType(libraryClass);			
 			//MethodInfo[] mis = classType.GetMethods(BindingFlags.Public | BindingFlags.Static);
 			//seem to have issue when trying to only get public & static methods, so get all instead
 			MethodInfo[] mis = classType.GetMethods();
@@ -239,104 +242,103 @@ namespace RobotFramework
 		/// <param name="args">Arguments, if any, to pass to keyword method.</param>
 		/// <returns></returns>
 		[XmlRpcMethod]
-		public keyword_results run_keyword(string keyword, object[] args)
+		public XmlRpcStruct run_keyword(string keyword, object[] args)
   		{
-			keyword_results kr = new keyword_results();
+			XmlRpcStruct kr = new XmlRpcStruct();
+			
 			if(keyword == "stop_remote_server")
 			{				
 				if(RemoteServer.enableStopServer){
+					//reset output back to stdout
+					StreamWriter stdout = new StreamWriter(Console.OpenStandardOutput());
+					stdout.AutoFlush = true;
+        			Console.SetOut(stdout);
+        			
 					//spawn new thread to do a delayed server shutdown
 					//and return XML-RPC response before delay is over
 					new Thread(stop_remote_server).Start();
 					Console.WriteLine("Shutting down remote server/library in 5 seconds, from Robot Framework remote");
 					Console.WriteLine("library/XML-RPC request.");
 					Console.WriteLine("");
-					kr.output = "NOTE: remote server shutting/shut down.";					
+					kr.Add("output","NOTE: remote server shutting/shut down.");
 				}else{
-					kr.output = "NOTE: remote server not configured to allow remote shutdowns. Your request has been ignored.";
+					kr.Add("output","NOTE: remote server not configured to allow remote shutdowns. Your request has been ignored.");
 					//in case RF spec changes to report failure in this case in future
-					//kr.status = "FAIL");
-					//kr.error = "NOTE: remote server not configured to allow remote shutdowns. Your request has been ignored.";
+					//kr.Add("status","FAIL");
+					//kr.Add("error","NOTE: remote server not configured to allow remote shutdowns. Your request has been ignored.");
 				}
-				kr.Return = "1";
-				kr.status = "PASS";
-				kr.error = "";
-				kr.traceback = "";
+				kr.Add("return",1);
+				kr.Add("status","PASS");
+				kr.Add("error","");
+				kr.Add("traceback","");
 				return kr;
 			}
-			Type classType = library.GetType(libraryClass);
-			object libObj = Activator.CreateInstance(classType);
+			//redirect output from test library to send back to Robot Framework			
+			Console.SetOut(libout); //comment out when debugging
+			Console.SetError(liberrs);
+			
 			MethodInfo mi = classType.GetMethod(keyword);			
 			
 			try
 			{
-				string retval = "";
-				if(mi.ReturnType == typeof(System.Int32) ||
-				   mi.ReturnType == typeof(System.String) ||
-				   mi.ReturnType == typeof(System.Boolean))
+				/* we let XML-RPC.NET library handle the data type conversion
+				 * hopefully, the test library returns one of the supported types:
+ 				 * http://xml-rpc.net/faq/xmlrpcnetfaq-2-5-0.html#1.9
+				 * http://xml-rpc.net/faq/xmlrpcnetfaq-2-5-0.html#1.12
+				 * Otherwise, an error may occur.
+				 */
+				if (mi.ReturnType == typeof(void))
 				{
-					//***case to handle basic data types
-					//due to strict data typing by .NET, return value will
-					//always be cast as a string in this implementation.
-					//Until we can fix/optimize it to return value in any
-					//one of the basic types: int, string, boolean, etc.
-					retval = (string) mi.Invoke(libObj, args).ToString();
-					if(mi.ReturnType == typeof(System.Boolean))
-					{
-						if(retval == "True")
-							kr.status = "PASS";
-						else //retval == "False"
-							kr.status = "FAIL";						
-					}
-					else //return type ~int, string, etc. so always pass, if no exception
-						kr.status = "PASS";					
-				}
-				else if(mi.ReturnType == typeof(System.Int32[]) ||
-				   	mi.ReturnType == typeof(System.String[]) ||
-				   	mi.ReturnType == typeof(System.Boolean[]))
-				{
-					//***case to handle array of basic data types
-					//due to strict data typing by .NET, return value will
-					//always be cast as a special delimited string value in this implementation.
-					//Until we can fix/optimize it to return value in array of any
-					//one of the basic types: int, string, boolean, etc.
-					object[] tmpretval;
-					tmpretval = (object[]) mi.Invoke(libObj, args);
-					//return results in this string format: {item1, item2, ...}
-					retval = "{";
-					foreach(object obj in tmpretval)
-					{
-						retval = retval + (string) obj.ToString() + ",";
-					}
-					retval = retval + "}";
-					kr.status = "PASS";
+					Console.WriteLine("got here"); //added for debugging for now...
+					mi.Invoke(libObj, args);
+					Console.WriteLine("called fnc");
+					//can't seem to pass null, else get XML-RPC fault code 0, Object reference not set to an instance of an object.
+					kr.Add("return","");  
+					Console.WriteLine("returned");
 				}
 				else
-				{	
-					//***case to handle keywords that don't return values, and all other cases
-					//expect no return value from keyword, so always pass, if no exception					
-					mi.Invoke(libObj, args);
-					kr.status = "PASS";
+				{
+					kr.Add("return",mi.Invoke(libObj, args));
 				}
-				kr.Return = retval;
-				//due to limitation of .NET (I think) in not being able to redirect
-				//standard (or stream) output from reflected/loaded library
-				//output will always be empty with this implementation. Until we can
-				//fix/optimize this deficiency.
-				kr.output = "";
-				kr.error = "";
-				kr.traceback = "";						
+									
+				kr.Add("status","PASS");				
+				kr.Add("output",libout.ToString());
+				libout.Flush();
+				kr.Add("error",liberrs.ToString());
+				liberrs.Flush();
+				kr.Add("traceback","");
+				return kr;
+			}			
+			catch(TargetInvocationException iex)
+			{
+				//exception message is probably more useful at this point than standard error?
+				liberrs.Flush();
+				
+				kr.Add("traceback",iex.InnerException.StackTrace);
+				kr.Add("error",iex.InnerException.Message);
+				
+				kr.Add("output",libout.ToString());
+				libout.Flush();
+				kr.Add("status","FAIL");
+				kr.Add("return",null);
 				return kr;
 			}
 			catch(System.Exception ex)
 			{
-				kr.traceback = ex.StackTrace;
-				kr.error = ex.Message;
-				kr.output = ex.Message;
-				kr.status = "FAIL";
-				kr.Return = "";
+				//to catch all other exceptions that are not nested or from target invocation (i.e. reflection)
+				
+				//exception message is probably more useful at this point than standard error?
+				liberrs.Flush();
+
+				kr.Add("traceback",ex.StackTrace);
+				kr.Add("error",ex.Message);
+				 
+				kr.Add("output",libout.ToString());
+				libout.Flush();
+				kr.Add("status","FAIL");
+				kr.Add("return",null);
 				return kr;
-			}					
+			}
 		}
 		
 		/// <summary>
@@ -365,7 +367,6 @@ namespace RobotFramework
 		public string[] get_keyword_arguments(string keyword)
 		{
 			if(keyword == "stop_remote_server") return new String[0];
-			Type classType = library.GetType(libraryClass);
 			MethodInfo mi = classType.GetMethod(keyword);
 			ParameterInfo[] pis = mi.GetParameters();
 			string[] args = new String[pis.Length];
@@ -444,11 +445,14 @@ namespace RobotFramework
 	}
 	
 	/// <summary>
-	/// Robot Framework run_keyword return value data structure, based on spec at
+	/// Deprecated static data structure for Robot Framework run_keyword return value, based on spec at
 	/// http://robotframework.googlecode.com/svn/tags/robotframework-2.5.6/doc/userguide/RobotFrameworkUserGuide.html#remote-library-interface
 	/// 
-	/// Due to strict data typing by .NET, return value will always be cast as a string in this implementation.
-	/// Until we can fix/optimize it to return value in any one of the basic types: int, string, array of strings/ints, etc.
+	/// Due to strict data typing by .NET, return value will always be cast as a string with this implementation.
+	/// Alternative is could be to use .NET generics? In any case, design has been superseded
+	/// by using XmlRpcStruct type from XML-RPC.NET library.
+	/// 
+	/// Recommend not to use, but kept here for reference.
 	/// </summary>
 	public struct keyword_results
 	{
@@ -458,7 +462,6 @@ namespace RobotFramework
 		public string error; //Possible error message. Used only when the execution fails.
 		[XmlRpcMember("return")]
 		public string Return; //Possible return value. Must be one of the supported RobotFramework/Python data types.
-		//due to strict data typing by .NET, return value will always be cast as a string in this implementation.
-		//Until we can fix/optimize it to return value in any one of the basic types: int, string, array of strings/ints, etc.
+		//due to strict data typing by .NET, return value will always be cast as a string with this implementation.
 	}
 }
