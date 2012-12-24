@@ -25,7 +25,7 @@ using System.Reflection; //for the get_keyword methods and run_keyword method
 using System.Xml;		//for use with get_keyword_documentation
 using System.Xml.XPath; //to generate documentation for remote library
 using System.Threading; //to shutdown server from remote request and at same time, return XML-RPC response
-using System.Diagnostics;
+using System.Diagnostics; //for planned use with TraceListener
 
 namespace RobotFramework
 {
@@ -282,19 +282,22 @@ namespace RobotFramework
 			try
 			{
 				/* we let XML-RPC.NET library handle the data type conversion
-				 * hopefully, the test library returns one of the supported types:
+				 * hopefully, the test library returns one of the supported XML-RPC data types:
  				 * http://xml-rpc.net/faq/xmlrpcnetfaq-2-5-0.html#1.9
 				 * http://xml-rpc.net/faq/xmlrpcnetfaq-2-5-0.html#1.12
 				 * Otherwise, an error may occur.
+				 * 
+				 * FYI, and this is the spec for Robot Framework remote library keyword argument and return type
+				 * http://robotframework.googlecode.com/svn/tags/robotframework-2.5.6/doc/userguide/RobotFrameworkUserGuide.html#supported-argument-and-return-value-types
+				 * on how data types should map, particularly for the non-native-supported types.
+				 * Hopefully XML-RPC.NET converts them closely to those types, otherwise, you will have to make some
+				 * changes in the remote server code here to adjust return type according to Robot Framework spec.
+				 * Or change the test library being served by the remote server to use simpler data structures (e.g. primitives)
 				 */
 				if (mi.ReturnType == typeof(void))
 				{
-					Console.WriteLine("got here"); //added for debugging for now...
 					mi.Invoke(libObj, args);
-					Console.WriteLine("called fnc");
-					//can't seem to pass null, else get XML-RPC fault code 0, Object reference not set to an instance of an object.
-					kr.Add("return","");  
-					Console.WriteLine("returned");
+					kr.Add("return",""); 
 				}
 				else
 				{
@@ -320,7 +323,7 @@ namespace RobotFramework
 				kr.Add("output",libout.ToString());
 				libout.Flush();
 				kr.Add("status","FAIL");
-				kr.Add("return",null);
+				kr.Add("return","");
 				return kr;
 			}
 			catch(System.Exception ex)
@@ -336,7 +339,7 @@ namespace RobotFramework
 				kr.Add("output",libout.ToString());
 				libout.Flush();
 				kr.Add("status","FAIL");
-				kr.Add("return",null);
+				kr.Add("return","");
 				return kr;
 			}
 		}
