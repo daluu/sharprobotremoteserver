@@ -4,6 +4,10 @@ rem You may alternatively compile with SharpDevelop, MonoDevelop, Visual Studio,
 rem by creating new console application and/or class library projects with the source files
 
 rem change .NET framework path to desired target version as needed
+rem e.g. 2.0 = %windir%\Microsoft.NET\Framework\v2.0.50727\csc.exe
+rem e.g. 3.5 = %windir%\Microsoft.NET\Framework\v3.5\csc.exe
+rem e.g. 4.0 = %windir%\Microsoft.NET\Framework\v4.0.30319\csc.exe
+rem e.g. 4.5 = TBD
 
 rem compile robotremoteserver (from local path)
 rem assumes XML-RPC.NET library DLL is precompiled and in local path
