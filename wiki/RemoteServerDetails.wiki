@@ -6,7 +6,7 @@
 
 ==Prerequisites==
 
-  * .NET Framework (version 2.0 and above, but not tested & compiled against all versions. May work with Mono and .NET 1.x as well, but untested.)
+  * .NET Framework (version 2.0 and above, but not tested & compiled against all versions. May work with Mono as well, but untested.)
   * [http://www.xml-rpc.net XML-RPC.NET] library (compiled DLL binary)
   * Example .NET remote library, bundled with the generic server, or your own .NET remote (class) library, for use with [http://www.robotframework.org Robot Framework].
   * If using with [http://www.robotframework.org Robot Framework] locally, running server on localhost, then need to install [http://www.robotframework.org Robot Framework].
@@ -17,7 +17,7 @@
 As the remote server acts as a remote library for [http://www.robotframework.org Robot Framework], no installation is needed. But the prerequisites have to be met first.
 
   # Download and compile [http://www.xml-rpc.net XML-RPC.NET] library, if needed.
-  # Download the [http://sharprobotremoteserver.googlecode.com/files/sharprobotremoteserver-1.1.zip generic remote server zip file package].
+  # Download the [http://sharprobotremoteserver.googlecode.com/files/sharprobotremoteserver-1.2.zip generic remote server zip file package].
   # Extract to desired location.
   # Copy over [http://www.xml-rpc.net XML-RPC.NET] library DLL to extracted location, if needed.
 
@@ -68,7 +68,7 @@ If loading a .NET library into remote server, and that library references a web 
 
 An alternative solution would be to modify the remote server or the remote (class) library to use dynamic binding at runtime rather than the app.config (or appName.exe.config) binding method.
 
-==Documentating your .NET remote library==
+==Documenting your .NET remote library==
 
 You can generate Robot Framework HTML documentation (or maybe even documentation that is logged in test logs during test runs) for your test library by doing the following sequence of steps:
 
@@ -83,17 +83,7 @@ You can alternatively use IronPython instead of Python here as well.
 
 =Known Issues=
 
-  * Return values are always returned (or type-casted) as a string. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=2 issue 2])
-
   * *get_keyword_names* may return extra .NET library methods that weren't intended to be used by [http://www.robotframework.org Robot Framework] (e.g. internal methods), so just ignore them. Bear in mind that if you don't debug the remote library, you won't notice this issue anyways as [http://www.robotframework.org Robot Framework] doesn't explicitly dump a list of available keywords for the end user to see, except for library documentation generation with libdoc.py. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=5 issue 5])
-
-  * keyword output will always be blank except in cases of exceptions being raised. Currently no real definition of what constitutes "output" from a keyword. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=3 issue 3])
-
-  * remote library keywords will always return as PASS except for those that have return type as boolean and return false, and in case of exceptions
-
-  * remote library keyword implementations that don't return a basic data type (string, int, bool) or an array of it will not return any value. For those that return an array of basic data type, it will be returned in a delimited string format like _{val1, val2, ...}_ instead of an actual array.
-
-  * Exceptions not caught at the server or library level may be returned as generic [http://www.xml-rpc.net/faq/xmlrpcnetfaq.html#4.2 XML-RPC fault code 0 per XML-RPC.net library]. These uncaught exceptions may or will also cause keyword to fail unexpectedly. ([http://code.google.com/p/sharprobotremoteserver/issues/detail?id=4 issue 4])
 
   * Remote server currently not designed with "web services" as a remote library in mind, but can be modified to load a "web service" reference as the remote library rather than a local class library assembly DLL. Alternative is to build a wrapper class library that calls/references the web service and then load the wrapper class library with remote server. That way you don't have to modify the remote server code. But with this approach, you may have to create/add a robotremoteserver.exe.config file to specify bindings to the web service, etc. unless you modify the remote server code or implement the wrapper class library to use dynamic binding rather than binding through app.config (or appName.exe.config), etc.
 
